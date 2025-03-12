@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SummarizePro | AI News Summarizer</title>
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --accent: #ff006e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #38b000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-position: bottom;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 1.5rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .input-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            top: -60px;
+        }
+
+        .tab-controls {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            padding: 0.7rem 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #777;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            transform: scaleX(1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="url"], input[type="number"], textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus, input[type="number"]:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+
+        .sentence-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sentence-control input {
+            width: 80px;
+        }
+
+        button.btn {
+            padding: 0.8rem 2rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button.btn:hover {
+            background-color: #2a75f3;
+            transform: translateY(-2px);
+        }
+
+        button.btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        button.btn-outline:hover {
+            background-color: rgba(58, 134, 255, 0.1);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .result-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-top: -30px;
+            display: none;
+        }
+
+        .result-container.visible {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .summary-content {
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .summary-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(58, 134, 255, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .feature-section {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .copy {
+            opacity: 0.7;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1.2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .input-container {
+                padding: 1.5rem;
+                top: -40px;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>SummarizePro</h1>
+            <p class="tagline">Extract essential information from news articles with AI-powered summarization</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="input-container">
+            <div class="tab-controls">
+                <button class="tab-btn active" data-tab="url">URL</button>
+                <button class="tab-btn" data-tab="text">Text</button>
+            </div>
+
+            <div class="tab-content active" id="url-tab">
+                <div class="form-group">
+                    <label for="article-url">Article URL</label>
+                    <input type="url" id="article-url" placeholder="https://example.com/news-article">
+                </div>
+            </div>
+
+            <div class="tab-content" id="text-tab">
+                <div class="form-group">
+                    <label for="article-text">Article Text</label>
+                    <textarea id="article-text" placeholder="Paste your article text here..."></textarea>
+                </div>
+            </div>
+
+            <div class="sentence-control">
+                <label for="sentences">Number of sentences in summary:</label>
+                <input type="number" id="sentences" min="1" max="20" value="5">
+            </div>
+
+            <div class="btn-container">
+                <button class="btn" id="summarize-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Summarize
+                </button>
+                <button class="btn btn-outline" id="clear-btn">Clear</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing article content...</p>
+        </div>
+
+        <div class="result-container" id="result">
+            <div class="result-header">
+                <h2 class="result-title">Summary</h2>
+                <button class="btn btn-outline" id="copy-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copy
+                </button>
+            </div>
+            <div class="summary-content" id="summary-content">
+                <!-- Summary will be inserted here -->
+            </div>
+            <div class="summary-meta">
+                <span id="sentence-count">5 sentences</span>
+                <span id="word-count">125 words</span>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <div class="feature-card">
+                <div class="feature-icon">📰</div>
+                <h3>Smart Extraction</h3>
+                <p>Our algorithm identifies the most important information from news articles using advanced NLP techniques.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Lightning Fast</h3>
+                <p>Get concise summaries in seconds, no matter how long the original article is.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Customizable</h3>
+                <p>Control the length of your summary by specifying the exact number of sentences you need.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>SummarizePro - AI-Powered News Summarization Tool</p>
+        <p class="copy">&copy; 2025 SummarizePro. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+
+                // Update active button
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update active content
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // Summarize button functionality
+        const summarizeBtn = document.getElementById('summarize-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const summaryContent = document.getElementById('summary-content');
+        const sentenceCount = document.getElementById('sentence-count');
+        const wordCount = document.getElementById('word-count');
+
+        // Sample summaries for demonstration
+        const sampleSummaries = [
+            "World leaders have reached a landmark agreement at the Global Climate Summit in Geneva, setting ambitious new targets to reduce carbon emissions by 60% before 2040. The agreement, signed by 194 nations on Thursday, represents the most significant global commitment to fighting climate change since the Paris Accord of 2015. Under the new agreement, developed nations have committed to providing $300 billion annually to help developing countries transition to renewable energy sources. The agreement will take effect in January, with the first progress review scheduled for 2026.",
+
+            "Researchers at the Quantum Computing Institute have achieved a major breakthrough in quantum computing stability, potentially bringing practical quantum computers years closer to widespread use. The team, led by Dr. Emily Chang, announced yesterday they have developed a new method for maintaining quantum coherence—the delicate state that allows quantum bits or 'qubits' to perform calculations—for up to 10 minutes at room temperature. The implications for technology and science are far-reaching. The team estimates that the first commercial applications using their technology could be available within three years, with more widespread adoption following in the five to seven year timeframe."
+        ];
+
+        summarizeBtn.addEventListener('click', async () => {
+            // Get active tab
+            const activeTab = document.querySelector('.tab-content.active').id;
+
+            // Get input value
+            let inputData = {};
+                if (activeTab === 'url-tab') {
+                    const url = document.getElementById('article-url').value;
+                    if (!url) {
+                        alert('Please enter a valid URL');
+                        return;
+                    }
+                    inputData.url = url;
+                } else {
+                    const text = document.getElementById('article-text').value;
+                    if (!text) {
+                        alert('Please enter article text');
+                        return;
+                    }
+                    inputData.text = text;
+                }
+
+            // Get number of sentences
+            const sentences = document.getElementById('sentences').value;
+
+            // Show loading
+            loading.classList.add('visible');
+            result.classList.remove('visible');
+
+            // Simulate API call (in a real application, you would send this to your Python backend)
+            try {
+                // Make API request to your backend
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(inputData),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'An error occurred during summarization');
+                }
+
+                // Update summary content
+                summaryContent.textContent = data.summary;
+
+                // Update meta information
+                sentenceCount.textContent = `${data.sentences} sentences`;
+                wordCount.textContent = `${data.words} words`;
+
+                // Show result
+                result.classList.add('visible');
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                } finally {
+                    // Hide loading
+                    loading.classList.remove('visible');
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            document.getElementById('article-url').value = '';
+            document.getElementById('article-text').value = '';
+            result.classList.remove('visible');
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = summaryContent.textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy';
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
